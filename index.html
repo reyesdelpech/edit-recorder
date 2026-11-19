@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hubot+Sans:wdth,wght@75..125,200..900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<title>Edit Recorder · v1.0.0 beta</title>
+<title>Edit Recorder · v1.1.0 beta</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgcng9IjI4IiBmaWxsPSIjMDAwIi8+PHJlY3QgeD0iMS41IiB5PSIxLjUiIHdpZHRoPSIxMjUiIGhlaWdodD0iMTI1IiByeD0iMjYuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjY2NkNWRiIiBzdHJva2Utb3BhY2l0eT0iLjI1IiBzdHJva2Utd2lkdGg9IjMiLz48ZyBzdHJva2U9IiM1OTU5NTkiIHN0cm9rZS13aWR0aD0iNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj48cGF0aCBkPSJNMzAgNDBIOTgiLz48cGF0aCBkPSJNMzAgNjRIOTgiLz48cGF0aCBkPSJNMzAgODhIOTgiLz48L2c+PGcgc3Ryb2tlPSIjZmFkNTIwIiBzdHJva2Utd2lkdGg9IjciIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTMwIDQwSDc0Ii8+PHBhdGggZD0iTTMwIDY0SDUyIi8+PHBhdGggZD0iTTMwIDg4SDg0Ii8+PC9nPjxjaXJjbGUgY3g9Ijc0IiBjeT0iNDAiIHI9IjEwIiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iNTIiIGN5PSI2NCIgcj0iMTAiIGZpbGw9IiNmZmYiLz48Y2lyY2xlIGN4PSI4NCIgY3k9Ijg4IiByPSIxMCIgZmlsbD0iI2VmNTkyOCIvPjwvc3ZnPg==">
 <style>
 :root{--bg:#000000;--panel:#2b2b2b;--line:rgba(204,213,219,.22);--txt:#ffffff;--mut:#ccd5db;--cap:#939393;--acc:#fad520;--blue:#1c33df;--orange:#ef5928;--soft:rgba(204,213,219,.16);
@@ -124,16 +124,35 @@ input[type=checkbox]{accent-color:var(--acc)}
 #result .fnote .already{background:none;border:0;padding:0;margin-left:12px;color:var(--cap);font-size:12px;text-decoration:underline;cursor:pointer}
 #result a.dl.locked{background:var(--soft);color:var(--cap);cursor:not-allowed;pointer-events:none}
 #result .unlockhint{color:var(--cap);font-size:12px;margin:6px 0 0}
+
+/* ---- about card ---- */
+#aboutCard p+p{margin-top:10px}
+#aboutBtn{padding:6px 14px;flex:none}
+#about{position:fixed;inset:0;z-index:8500;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72);padding:16px}
+#about.on{display:flex}
+#aboutCard{position:relative;width:480px;max-width:100%;max-height:calc(100vh - 32px);overflow:auto;background:#1b1b1b;border:1px solid var(--acc);border-radius:20px;padding:26px 26px 24px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+#aboutCard .ver{font:500 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--acc);margin-bottom:6px}
+#aboutCard h2{margin:0 0 16px;font:600 22px var(--disp)}
+#aboutCard h3{margin:18px 0 6px;font:500 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--cap)}
+#aboutCard p{margin:0;color:var(--mut);font-size:13px;line-height:1.55}
+#aboutCard .links{display:flex;gap:10px;flex-wrap:wrap}
+#aboutCard .links a{display:inline-block;padding:8px 16px;border:1px solid var(--line);border-radius:24px;color:var(--txt);text-decoration:none;font-size:13px}
+#aboutCard .links a:hover{border-color:var(--acc);color:var(--acc)}
+#aboutCard .cta{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+#aboutCard .cta p{color:var(--txt);font-weight:500;margin-bottom:12px}
+#aboutCard .mail{display:inline-block;padding:10px 22px;background:var(--acc);color:#000;border-radius:24px;font-weight:600;text-decoration:none;font-size:13px}
+#aboutClose{position:absolute;top:14px;right:14px;width:30px;height:30px;padding:0;border-radius:50%;line-height:30px;text-align:center}
 </style>
 </head>
 <body>
 <header>
-  <h1><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="#000"/><rect x="1.5" y="1.5" width="125" height="125" rx="26.5" fill="none" stroke="#ccd5db" stroke-opacity=".25" stroke-width="3"/><g stroke="#595959" stroke-width="7" stroke-linecap="round"><path d="M30 40H98"/><path d="M30 64H98"/><path d="M30 88H98"/></g><g stroke="#fad520" stroke-width="7" stroke-linecap="round"><path d="M30 40H74"/><path d="M30 64H52"/><path d="M30 88H84"/></g><circle cx="74" cy="40" r="10" fill="#fff"/><circle cx="52" cy="64" r="10" fill="#fff"/><circle cx="84" cy="88" r="10" fill="#ef5928"/></svg><span>Edit Recorder</span><span class="beta">v1.0.0 beta</span></h1>
+  <h1><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="#000"/><rect x="1.5" y="1.5" width="125" height="125" rx="26.5" fill="none" stroke="#ccd5db" stroke-opacity=".25" stroke-width="3"/><g stroke="#595959" stroke-width="7" stroke-linecap="round"><path d="M30 40H98"/><path d="M30 64H98"/><path d="M30 88H98"/></g><g stroke="#fad520" stroke-width="7" stroke-linecap="round"><path d="M30 40H74"/><path d="M30 64H52"/><path d="M30 88H84"/></g><circle cx="74" cy="40" r="10" fill="#fff"/><circle cx="52" cy="64" r="10" fill="#fff"/><circle cx="84" cy="88" r="10" fill="#ef5928"/></svg><span>Edit Recorder</span><span class="beta">v1.1.0 beta</span></h1>
   <span class="div"></span>
   <div class="g"><span class="l">Photo</span><button id="btnLoad">Load photo…</button><input type="file" id="file" accept="image/*,.arw,.cr2,.cr3,.crw,.nef,.nrw,.dng,.raf,.orf,.rw2,.pef,.srw,.3fr,.iiq,.erf,.kdc,.mrw,.mef,.raw" hidden><span class="l">RAW</span><select id="rawMode" title="How RAW files are imported"><option value="preview">Embedded preview</option><option value="full">Full decode 16-bit (beta)</option></select></div>
   <span class="div"></span>
   <div class="g" id="recGroup"><span class="l">Record</span><button id="btnRec" class="rec">● Record</button><button id="btnPause" disabled>❚❚ Pause</button><button id="btnStop" disabled>■ Stop</button><label style="color:var(--mut);display:flex;gap:6px;align-items:center;cursor:pointer;font:400 12px var(--mono)" title="Start recording by itself as soon as you move a control"><input type="checkbox" id="autoRec" checked> Auto-record</label><button id="btnReset">Reset edit</button></div>
   <span class="sp"></span>
+  <button id="aboutBtn" title="About this tool">About</button>
   <button id="tourBtn" title="Replay the quick tour" aria-label="Replay the quick tour">?</button>
   <a id="credit" href="https://reyesdelpech.com" target="_blank" rel="noopener">by <b>Javier Reyes</b></a>
 </header>
@@ -195,6 +214,17 @@ input[type=checkbox]{accent-color:var(--acc)}
 </main>
 <footer id="statusbar"><span class="si"><b>Status</b><span id="status">Ready</span></span></footer>
 
+<div id="about" role="dialog" aria-modal="true" aria-label="About Edit Recorder"><div id="aboutCard"><button id="aboutClose" aria-label="Close">✕</button>
+<div class="ver">v1.1.0 beta</div><h2>About Edit Recorder</h2>
+<h3>Where the idea comes from</h3>
+<p>This idea was inspired by a reel I found while scrolling on Instagram, where a photo edit is replayed step by step. I tried to find out who made the first one but couldn't track the original author down. If you know who it is, please tell me using the Email me button below, and I'll gladly give them credit here.</p>
+<h3>Who I am</h3>
+<p>I'm Javier Reyes, a Senior Motion Designer and Art Director (RGD) with 15+ years of experience, based in Edmonton, Alberta. I help tech and fintech teams explain complex ideas through 2D and 3D motion, motion toolkits and product visuals. My rule: Logic before beauty®.</p>
+<p>I think in systems, and I build hyper-customized tools around how a specific person or team really works. It’s also my way of exploring a new frontier: every tool I build teaches me something new.</p>
+<h3>Find me</h3>
+<div class="links"><a href="https://www.instagram.com/reyesdelpech/" target="_blank" rel="noopener">Instagram</a><a href="https://www.linkedin.com/in/javierreyesdelpech/" target="_blank" rel="noopener">LinkedIn</a><a href="https://reyesdelpech.com" target="_blank" rel="noopener">Website</a></div>
+<div class="cta"><p>Need something like this, or something more specific for you?<br>Feel free to contact me.</p><a class="mail" id="aboutMail" href="#">Email me</a></div>
+</div></div>
 <div id="tour" aria-live="polite"><div id="tourHole"></div><div id="tourCard" role="dialog" aria-label="Quick tour"><div class="arrow"></div><div class="tk" id="tourStep"></div><h3 id="tourTitle"></h3><p id="tourText"></p><div class="tr"><button id="tourSkip">Skip tour</button><span class="sp"></span><button id="tourBack">Back</button><button id="tourNext">Next</button></div></div></div>
 <script>
 "use strict";
@@ -1135,6 +1165,8 @@ function startExport(){
     showResult(url,ext,blob.size);
     setStatus('Export finished: see the Export tab');
     document.querySelector('[data-t=exp]').click();
+    /* bring the "video is ready" message into view */
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{const r=$('#result');if(r&&r.scrollIntoView)r.scrollIntoView({behavior:'smooth',block:'end'})}));
   };
   document.querySelector('[data-t=exp]').click();
   $('#result').innerHTML='';
@@ -1564,6 +1596,19 @@ function showResult(url,ext,size){
   addEventListener('resize',()=>{if(root.classList.contains('on'))place()});
   window.editRecorderTour=start;
   if(!seen())setTimeout(start,600);
+})();
+
+/* ---- about card ---- */
+(()=>{
+  const el=document.getElementById('about');
+  const open=()=>{el.classList.add('on');document.getElementById('aboutClose').focus()};
+  const close=()=>el.classList.remove('on');
+  document.getElementById('aboutBtn').onclick=open;
+  document.getElementById('aboutClose').onclick=close;
+  el.addEventListener('click',e=>{if(e.target===el)close()});
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&el.classList.contains('on'))close()});
+  /* the address is assembled on click so it is not written out in the page */
+  document.getElementById('aboutMail').addEventListener('click',e=>{e.currentTarget.href='mailto:'+['javier','reyesdelpech.com'].join('@')+'?subject='+encodeURIComponent('Edit Recorder')});
 })();
 </script>
 </body>
