@@ -54,7 +54,7 @@ aside{border-left:1px solid var(--line);background:var(--panel);display:flex;fle
 #tabs{display:flex;border-bottom:1px solid var(--line)}
 #tabs button{flex:1;border:0;border-radius:0;background:none;padding:13px;font:500 12px var(--mono);text-transform:uppercase;letter-spacing:.02em;color:var(--mut)}
 #tabs button.on{border-bottom:2px solid var(--acc);color:var(--acc)}
-.tab{display:none;overflow:auto;padding:20px;flex:1}
+.tab{display:none;overflow-y:auto;overflow-x:hidden;padding:20px;flex:1}
 .tab.on{display:block}
 section.g{margin-bottom:22px}
 section.g h3{margin:0 0 10px;font:500 12px var(--mono);letter-spacing:.02em;text-transform:uppercase;color:var(--acc);display:flex;justify-content:space-between}
@@ -82,6 +82,8 @@ section.g h3 a{color:var(--mut);cursor:pointer;text-transform:none;letter-spacin
 .cap b{display:block;margin-bottom:5px;color:var(--acc);font:500 12px var(--mono);letter-spacing:.02em;text-transform:uppercase}
 .cap input{width:100%;margin-bottom:5px;cursor:text;border-radius:8px;background:rgba(0,0,0,.35);border:1px solid var(--line)}
 .field{display:grid;grid-template-columns:116px 1fr;gap:8px;align-items:center;margin:9px 0;color:var(--mut)}
+.field>*{min-width:0}
+.field select{width:100%;max-width:100%;text-overflow:ellipsis}
 .field input[type=text],.field input[type=number]{cursor:text;border-radius:8px;background:rgba(0,0,0,.35);border:1px solid var(--line)}
 input[type=number]{font:inherit;color:var(--txt);background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
 input[type=checkbox]{accent-color:var(--acc)}
@@ -91,6 +93,37 @@ input[type=checkbox]{accent-color:var(--acc)}
 .rd{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--orange);margin-right:6px;animation:b 1s infinite}
 @keyframes b{50%{opacity:.2}}
 @media(max-width:900px){body{display:block}main{grid-template-columns:1fr;grid-template-rows:auto 420px;height:auto}}
+
+/* ---- first-run tour ---- */
+#tourBtn{width:30px;height:30px;padding:0;border-radius:50%;font:600 14px var(--body);line-height:30px;text-align:center;flex:none}
+#tour{position:fixed;inset:0;z-index:9000;display:none}
+#tour.on{display:block}
+#tourHole{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.72),0 0 0 2px var(--acc);pointer-events:none;transition:all .25s ease}
+#tourCard{position:fixed;width:310px;max-width:calc(100vw - 24px);background:#1b1b1b;border:1px solid var(--acc);border-radius:16px;padding:16px 16px 14px;box-shadow:0 12px 40px rgba(0,0,0,.6);transition:top .25s ease,left .25s ease}
+#tourCard .arrow{position:absolute;width:14px;height:14px;background:#1b1b1b;border:1px solid var(--acc);transform:rotate(45deg)}
+#tourCard[data-side=bottom] .arrow{top:-8px;border-right:0;border-bottom:0}
+#tourCard[data-side=top] .arrow{bottom:-8px;border-left:0;border-top:0}
+#tourCard[data-side=left] .arrow{right:-8px;border-left:0;border-bottom:0}
+#tourCard[data-side=right] .arrow{left:-8px;border-right:0;border-top:0}
+#tourCard .tk{font:500 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--acc);margin-bottom:6px}
+#tourCard h3{margin:0 0 6px;font:600 16px var(--disp)}
+#tourCard p{margin:0 0 14px;color:var(--mut);font-size:12.5px;line-height:1.5}
+#tourCard .tr{display:flex;align-items:center;gap:8px}
+#tourCard .tr .sp{flex:1}
+#tourCard button{padding:7px 14px;font-size:12px}
+#tourCard #tourNext{background:var(--acc);color:#000;font-weight:600}
+#tourCard #tourSkip{background:transparent;color:var(--mut);padding-left:0}
+#tourCard #tourSkip:hover{color:var(--txt)}
+
+/* ---- follow note (honor code) ---- */
+#result .fnote{margin:12px 0 4px;padding:14px;border:1px solid var(--acc);border-radius:14px;background:rgba(250,213,32,.07)}
+#result .fnote h4{margin:0 0 6px;font:600 14px var(--disp)}
+#result .fnote p{margin:0 0 10px;color:var(--mut);font-size:12.5px;line-height:1.5}
+#result .fnote a.follow{margin:0;background:transparent;color:var(--acc);border:1px solid var(--acc)}
+#result .fnote .already[hidden]{display:none}
+#result .fnote .already{background:none;border:0;padding:0;margin-left:12px;color:var(--cap);font-size:12px;text-decoration:underline;cursor:pointer}
+#result a.dl.locked{background:var(--soft);color:var(--cap);cursor:not-allowed;pointer-events:none}
+#result .unlockhint{color:var(--cap);font-size:12px;margin:6px 0 0}
 </style>
 </head>
 <body>
@@ -99,8 +132,9 @@ input[type=checkbox]{accent-color:var(--acc)}
   <span class="div"></span>
   <div class="g"><span class="l">Photo</span><button id="btnLoad">Load photo…</button><input type="file" id="file" accept="image/*,.arw,.cr2,.cr3,.crw,.nef,.nrw,.dng,.raf,.orf,.rw2,.pef,.srw,.3fr,.iiq,.erf,.kdc,.mrw,.mef,.raw" hidden><span class="l">RAW</span><select id="rawMode" title="How RAW files are imported"><option value="preview">Embedded preview</option><option value="full">Full decode 16-bit (beta)</option></select></div>
   <span class="div"></span>
-  <div class="g"><span class="l">Record</span><button id="btnRec" class="rec">● Record</button><button id="btnPause" disabled>❚❚ Pause</button><button id="btnStop" disabled>■ Stop</button><label style="color:var(--mut);display:flex;gap:6px;align-items:center;cursor:pointer;font:400 12px var(--mono)" title="Start recording by itself as soon as you move a control"><input type="checkbox" id="autoRec" checked> Auto-record</label><button id="btnReset">Reset edit</button></div>
+  <div class="g" id="recGroup"><span class="l">Record</span><button id="btnRec" class="rec">● Record</button><button id="btnPause" disabled>❚❚ Pause</button><button id="btnStop" disabled>■ Stop</button><label style="color:var(--mut);display:flex;gap:6px;align-items:center;cursor:pointer;font:400 12px var(--mono)" title="Start recording by itself as soon as you move a control"><input type="checkbox" id="autoRec" checked> Auto-record</label><button id="btnReset">Reset edit</button></div>
   <span class="sp"></span>
+  <button id="tourBtn" title="Replay the quick tour" aria-label="Replay the quick tour">?</button>
   <a id="credit" href="https://reyesdelpech.com" target="_blank" rel="noopener">by <b>Javier Reyes</b></a>
 </header>
 <div id="bar">
@@ -142,7 +176,7 @@ input[type=checkbox]{accent-color:var(--acc)}
       <div class="field"><span>Music start</span><div><input type="number" id="mstart" value="0" min="0" step="0.5" style="width:80px"> s into the track</div></div>
       <div class="field"><span></span><label><input type="checkbox" id="mloop" checked> Loop music if shorter (fades out at the end)</label></div>
       <div class="field"><span>Speed / length</span>
-        <select id="speed"><option value="auto">Auto (natural pace, video max 30 s)</option><option value="2">2× faster</option><option value="4">4× faster</option><option value="8">8× faster</option><option value="f15">Fit video to 15 s</option><option value="f30">Fit video to 30 s</option><option value="f60">Fit video to 60 s</option></select></div>
+        <select id="speed"><option value="auto">Auto (natural pace, max 30 s)</option><option value="2">2× faster</option><option value="4">4× faster</option><option value="8">8× faster</option><option value="f15">Fit video to 15 s</option><option value="f30">Fit video to 30 s</option><option value="f60">Fit video to 60 s</option></select></div>
       <div class="field"><span>Timelapse (as recorded)</span><label><input type="checkbox" id="trim" checked> Cut pauses (no slider movement)</label></div>
       <div class="field"><span>Before / after</span>
         <select id="rev"><option value="1.5">Sweep 1.5 s</option><option value="2" selected>Sweep 2 s</option><option value="3">Sweep 3 s</option><option value="off">Off</option></select></div>
@@ -161,6 +195,7 @@ input[type=checkbox]{accent-color:var(--acc)}
 </main>
 <footer id="statusbar"><span class="si"><b>Status</b><span id="status">Ready</span></span></footer>
 
+<div id="tour" aria-live="polite"><div id="tourHole"></div><div id="tourCard" role="dialog" aria-label="Quick tour"><div class="arrow"></div><div class="tk" id="tourStep"></div><h3 id="tourTitle"></h3><p id="tourText"></p><div class="tr"><button id="tourSkip">Skip tour</button><span class="sp"></span><button id="tourBack">Back</button><button id="tourNext">Next</button></div></div></div>
 <script>
 "use strict";
 const $=s=>document.querySelector(s);
@@ -429,26 +464,96 @@ function drawGL(W,H){
 }
 
 /* ---------- sample image ---------- */
-function makeSample(){
+/* six different sample scenes; one is picked at random each time the tool opens */
+function makeSample(pick){
   const W=1200,H=1800,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
-  let s=7;const rnd=()=>(s=(s*16807)%2147483647)/2147483647;
-  const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#c9d3d1');g.addColorStop(.5,'#e4e2d3');g.addColorStop(1,'#b9b7a6');x.fillStyle=g;x.fillRect(0,0,W,H);
-  // tower
-  x.fillStyle='#b89a58';x.beginPath();x.moveTo(470,1500);x.lineTo(520,420);x.lineTo(600,260);x.lineTo(680,420);x.lineTo(730,1500);x.fill();
-  for(let y=420;y<1500;y+=34){x.fillStyle=`rgba(${60+rnd()*40},${50+rnd()*30},20,.35)`;x.fillRect(480+(y-420)*.04,y,240-(y-420)*.07,12)}
-  x.fillStyle='#d6c28a';x.beginPath();x.arc(600,300,70,Math.PI,0);x.fill();
-  // buildings
-  const cols=['#5c6b55','#6e7a5a','#4f6258','#8a6b4a','#9b7a55','#58635c','#6b5f52'];
-  function side(x0,x1,dir){
-    for(let i=0;i<22;i++){
-      const w=130+rnd()*120,hh=700+rnd()*1000,xx=dir<0?x0+(rnd()*(x1-x0-w)):x1-w-(rnd()*(x1-x0-w));
-      x.fillStyle=cols[Math.floor(rnd()*cols.length)];x.fillRect(xx,H-hh,w,hh);
-      for(let yy=H-hh+30;yy<H-40;yy+=46)for(let xx2=xx+14;xx2<xx+w-24;xx2+=36){x.fillStyle=rnd()>.7?'rgba(240,200,120,.5)':'rgba(25,30,28,.55)';x.fillRect(xx2,yy,20,26)}
+  let s=1+Math.floor(Math.random()*2147483000);const rnd=()=>(s=(s*16807)%2147483647)/2147483647;
+  const lin=(y0,y1,stops)=>{const g=x.createLinearGradient(0,y0,0,y1);stops.forEach(([o,col])=>g.addColorStop(o,col));return g};
+  const ridge=(y0,amp,col,k)=>{const a=[1+rnd()*k,1+rnd()*k,1+rnd()*k],p=[rnd()*9,rnd()*9,rnd()*9];x.fillStyle=col;x.beginPath();x.moveTo(0,H);
+    for(let px=0;px<=W;px+=6){const n=.6*(1-Math.abs(Math.sin(px*.0035*a[0]+p[0])))+.3*(1-Math.abs(Math.sin(px*.008*a[1]+p[1])))+.1*(1-Math.abs(Math.sin(px*.02*a[2]+p[2])));x.lineTo(px,y0-amp*n)}
+    x.lineTo(W,H);x.closePath();x.fill()};
+  const dune=(y0,amp,col,hi)=>{const a=[.6+rnd()*.8,1+rnd()*1.2],p=[rnd()*9,rnd()*9],pts=[];
+    for(let px=0;px<=W;px+=6)pts.push([px,y0-amp*(.5+.32*Math.sin(px*.0035*a[0]+p[0])+.18*Math.sin(px*.009*a[1]+p[1]))]);
+    x.fillStyle=col;x.beginPath();x.moveTo(0,H);pts.forEach(q=>x.lineTo(q[0],q[1]));x.lineTo(W,H);x.closePath();x.fill();
+    x.strokeStyle=hi;x.lineWidth=5;x.beginPath();pts.forEach((q,i)=>i?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]));x.stroke()};
+  const pine=(px,yb,h,w)=>{x.beginPath();x.moveTo(px,yb-h);const T=5;
+    for(let t=1;t<=T;t++){const y=yb-h+h*t/T*.92,hw=w/2*t/T;x.lineTo(px+hw,y);x.lineTo(px+hw*.5,y-h*.02)}
+    x.lineTo(px+w*.04,yb);x.lineTo(px-w*.04,yb);
+    for(let t=T;t>=1;t--){const y=yb-h+h*t/T*.92,hw=w/2*t/T;x.lineTo(px-hw,y);x.lineTo(px-hw*.5,y-h*.02)}x.closePath();x.fill()};
+  const scenes=[
+    function city(){ // 0: city skyline, golden haze
+      const cols=['#5c6b55','#6e7a5a','#4f6258','#8a6b4a','#9b7a55','#58635c','#6b5f52'];
+      x.fillStyle=lin(0,H,[[0,'#c9d3d1'],[.5,'#e4e2d3'],[1,'#b9b7a6']]);x.fillRect(0,0,W,H);
+      const top=240+rnd()*120;
+      x.fillStyle='#b89a58';x.beginPath();x.moveTo(470,1500);x.lineTo(520,top+160);x.lineTo(600,top);x.lineTo(680,top+160);x.lineTo(730,1500);x.fill();
+      for(let y=top+160;y<1500;y+=34){x.fillStyle=`rgba(${60+rnd()*40},${50+rnd()*30},20,.35)`;x.fillRect(480+(y-420)*.04,y,240-(y-420)*.07,12)}
+      x.fillStyle='#d6c28a';x.beginPath();x.arc(600,top+40,70,Math.PI,0);x.fill();
+      const side=(x0,x1,dir)=>{for(let i=0;i<22;i++){const w=130+rnd()*120,hh=700+rnd()*1000,xx=dir<0?x0+(rnd()*(x1-x0-w)):x1-w-(rnd()*(x1-x0-w));
+        x.fillStyle=cols[Math.floor(rnd()*cols.length)];x.fillRect(xx,H-hh,w,hh);
+        for(let yy=H-hh+30;yy<H-40;yy+=46)for(let x2=xx+14;x2<xx+w-24;x2+=36){x.fillStyle=rnd()>.7?'rgba(240,200,120,.5)':'rgba(25,30,28,.55)';x.fillRect(x2,yy,20,26)}}};
+      side(-60,430,-1);side(780,1260,1);
+      x.fillStyle=lin(H*.55,H,[[0,'rgba(220,220,205,0)'],[1,'rgba(40,40,36,.85)']]);x.fillRect(0,H*.55,W,H*.45);
+      x.fillStyle='rgba(235,235,225,.18)';x.fillRect(0,0,W,H);
+    },
+    function lake(){ // 1: mountain lake at sunrise
+      const hy=1000,sx=380+rnd()*440;
+      x.fillStyle=lin(0,hy,[[0,'#2b3a67'],[.55,'#d98b8f'],[1,'#f8dba6']]);x.fillRect(0,0,W,H);
+      let g=x.createRadialGradient(sx,hy-40,10,sx,hy-40,520);g.addColorStop(0,'rgba(255,240,200,.95)');g.addColorStop(.25,'rgba(255,200,140,.45)');g.addColorStop(1,'rgba(255,200,140,0)');x.fillStyle=g;x.fillRect(0,0,W,hy);
+      x.fillStyle='#fff6dc';x.beginPath();x.arc(sx,hy-60,90,0,7);x.fill();
+      ridge(hy+10,430,'#8e7a9a',.5);ridge(hy+20,330,'#5f5f86',.7);ridge(hy+30,240,'#3b4a6e',1);ridge(hy+40,150,'#1f2f4a',1.3);
+      x.fillStyle=lin(hy,H,[[0,'#e9b08f'],[.25,'#a8708f'],[1,'#1c2742']]);x.fillRect(0,hy+20,W,H-hy);
+      for(let i=0;i<150;i++){const yy=hy+30+Math.pow(rnd(),1.6)*(H-hy-40),len=40+rnd()*220,xx=rnd()*W;x.fillStyle=`rgba(255,${200+rnd()*40|0},${150+rnd()*40|0},${.05+rnd()*.12})`;x.fillRect(xx,yy,len,3+rnd()*4)}
+      g=x.createLinearGradient(sx-60,0,sx+60,0);x.fillStyle='rgba(255,235,190,.35)';for(let i=0;i<30;i++){const yy=hy+40+i*i*.9;x.fillRect(sx-90+rnd()*40-i*2,yy,180+i*4,4)}
+      x.fillStyle='#0c151f';for(let i=0;i<9;i++)pine(40+i*52+rnd()*20,H+10,520+rnd()*380,170+rnd()*60);
+      for(let i=0;i<8;i++)pine(W-30-i*56-rnd()*20,H+10,480+rnd()*420,170+rnd()*60);
+    },
+    function dunes(){ // 2: desert dunes, big sun
+      x.fillStyle=lin(0,1000,[[0,'#3f73a8'],[.6,'#b9cfd6'],[1,'#f7e0b4']]);x.fillRect(0,0,W,H);
+      const sx=300+rnd()*600;let g=x.createRadialGradient(sx,520,20,sx,520,420);g.addColorStop(0,'rgba(255,250,230,.95)');g.addColorStop(.3,'rgba(255,240,200,.35)');g.addColorStop(1,'rgba(255,240,200,0)');x.fillStyle=g;x.fillRect(0,0,W,1100);
+      x.fillStyle='#fffaf0';x.beginPath();x.arc(sx,520,110,0,7);x.fill();
+      dune(1020,160,'#f0c88a','#fde3b5');dune(1150,220,'#e3ac6c','#f6cf96');dune(1330,260,'#c98650','#e8a972');dune(1520,300,'#a4603a','#cf8656');dune(1720,320,'#6f3d28','#a8603a');
+      for(let i=0;i<380;i++){x.fillStyle=`rgba(255,235,200,${.04+rnd()*.07})`;x.fillRect(rnd()*W,1000+rnd()*800,6+rnd()*26,2)}
+      x.fillStyle='rgba(30,18,10,.55)';x.beginPath();x.ellipse(700+rnd()*120,1270,9,26,.1,0,7);x.fill();
+    },
+    function forest(){ // 3: pine forest in morning mist
+      x.fillStyle=lin(0,H,[[0,'#cfdcd8'],[.5,'#eaf0e8'],[1,'#a9bdb4']]);x.fillRect(0,0,W,H);
+      x.fillStyle='rgba(255,252,235,.45)';for(let i=0;i<5;i++){const bx=500+i*140+rnd()*40;x.beginPath();x.moveTo(bx,0);x.lineTo(bx+110,0);x.lineTo(bx-420,H);x.lineTo(bx-640,H);x.closePath();x.globalAlpha=.16;x.fill();x.globalAlpha=1}
+      const layers=[['#b7c9c1',560,60,300,120],['#97b0a7',720,50,380,140],['#6f8e84',900,44,480,170],['#44695e',1090,38,590,200],['#25463d',1290,34,700,230],['#10281f',1530,30,850,270]];
+      layers.forEach(([col,yb,n,h,w],li)=>{x.fillStyle=col;for(let i=0;i<n/2;i++)pine(rnd()*(W+200)-100,yb+rnd()*60,h*(.7+rnd()*.6),w*(.7+rnd()*.6));
+        x.fillRect(0,yb+30,W,H);x.fillStyle=lin(yb-80,yb+260,[[0,'rgba(240,246,240,0)'],[.5,`rgba(240,246,240,${.35+li*.04})`],[1,'rgba(240,246,240,0)']]);x.fillRect(0,yb-80,W,340)});
+      x.fillStyle='#08170f';for(let i=0;i<10;i++)pine(rnd()*W,H+40,1000+rnd()*500,330+rnd()*120);
+    },
+    function lighthouse(){ // 4: lighthouse and sea at sunset
+      const hy=1060;
+      x.fillStyle=lin(0,hy,[[0,'#2b2a5c'],[.4,'#a1457a'],[.75,'#f08a58'],[1,'#ffd38a']]);x.fillRect(0,0,W,H);
+      let g=x.createRadialGradient(780,hy,10,780,hy,420);g.addColorStop(0,'rgba(255,235,170,.95)');g.addColorStop(1,'rgba(255,200,120,0)');x.fillStyle=g;x.fillRect(0,0,W,hy);
+      x.fillStyle='#ffe9b0';x.beginPath();x.arc(780,hy,120,Math.PI,0);x.fill();
+      for(let i=0;i<5;i++){x.fillStyle=`rgba(255,255,255,${.1+rnd()*.12})`;x.fillRect(rnd()*900,300+rnd()*500,200+rnd()*300,10+rnd()*14)}
+      x.fillStyle=lin(hy,H,[[0,'#e88a5c'],[.3,'#9a4a6a'],[1,'#141a3a']]);x.fillRect(0,hy,W,H-hy);
+      for(let i=0;i<260;i++){const yy=hy+6+Math.pow(rnd(),1.5)*(H-hy-20);x.fillStyle=`rgba(255,${190+rnd()*50|0},${120+rnd()*50|0},${.07+rnd()*.16})`;const hw=Math.max(10,(1-(yy-hy)/(H-hy))*240);x.fillRect(780-hw+rnd()*hw*2,yy,10+rnd()*70,3)}
+      for(let i=0;i<140;i++){x.fillStyle=`rgba(15,15,45,${.1+rnd()*.15})`;x.fillRect(rnd()*W,hy+20+rnd()*(H-hy),30+rnd()*120,3)}
+      x.fillStyle='#0c0c1c';x.beginPath();x.moveTo(-20,H);x.lineTo(-20,1150);x.quadraticCurveTo(120,1090,230,1150);x.lineTo(380,1330);x.quadraticCurveTo(300,1460,420,H);x.closePath();x.fill();
+      x.fillStyle='#f3ece0';x.beginPath();x.moveTo(60,1140);x.lineTo(110,620);x.lineTo(210,620);x.lineTo(250,1140);x.fill();
+      for(let k=0;k<3;k++){const y0=720+k*150,y1=y0+60,lx=(y)=>110-(y-620)/(1140-620)*50,rx=(y)=>210+(y-620)/(1140-620)*40;x.fillStyle='#c4452f';x.beginPath();x.moveTo(lx(y0),y0);x.lineTo(rx(y0),y0);x.lineTo(rx(y1),y1);x.lineTo(lx(y1),y1);x.closePath();x.fill()}
+      x.fillStyle='#1b1b2e';x.fillRect(100,570,120,50);x.fillStyle='#ffe58a';x.fillRect(116,578,88,34);x.fillStyle='#1b1b2e';x.beginPath();x.moveTo(90,570);x.lineTo(160,510);x.lineTo(230,570);x.fill();
+      g=x.createLinearGradient(160,0,W,0);g.addColorStop(0,'rgba(255,240,180,.55)');g.addColorStop(1,'rgba(255,240,180,0)');x.fillStyle=g;x.beginPath();x.moveTo(190,592);x.lineTo(W,430);x.lineTo(W,760);x.closePath();x.fill();
+      x.strokeStyle='#0d0d1c';x.lineWidth=5;x.lineCap='round';for(let i=0;i<5;i++){const bx=620+rnd()*400,by=260+rnd()*260;x.beginPath();x.moveTo(bx-22,by-10);x.quadraticCurveTo(bx-8,by-24,bx,by);x.quadraticCurveTo(bx+8,by-24,bx+22,by-10);x.stroke()}
+    },
+    function arches(){ // 5: graphic arches in warm light
+      x.fillStyle='#efe0c8';x.fillRect(0,0,W,H);
+      x.fillStyle='#f0a63e';x.beginPath();x.arc(820,560,230,0,7);x.fill();
+      const arch=(ax,ay,aw,ah,col,shade)=>{x.fillStyle=col;x.beginPath();x.moveTo(ax,ay+ah);x.lineTo(ax,ay+aw/2);x.arc(ax+aw/2,ay+aw/2,aw/2,Math.PI,0);x.lineTo(ax+aw,ay+ah);x.closePath();x.fill();
+        x.fillStyle=shade;x.beginPath();x.moveTo(ax+aw*.52,ay+ah);x.lineTo(ax+aw*.52,ay+aw*.5);x.arc(ax+aw/2,ay+aw/2,aw/2,0,Math.PI*.55,false);x.lineTo(ax+aw*.52,ay+aw*.5);x.closePath();x.globalAlpha=.0;x.fill();x.globalAlpha=1};
+      x.fillStyle='#d9c3a1';x.fillRect(0,1380,W,420);
+      arch(70,640,380,740,'#c8644a','#8f3f2d');arch(430,430,420,950,'#7e9d7b','#4e6d4f');arch(840,740,300,640,'#26375f','#17223f');
+      x.fillStyle='rgba(60,35,25,.28)';x.beginPath();x.moveTo(70,1380);x.lineTo(450,1380);x.lineTo(700,1800);x.lineTo(180,1800);x.closePath();x.fill();
+      x.fillStyle='rgba(30,20,50,.35)';x.beginPath();x.moveTo(850,1380);x.lineTo(1140,1380);x.lineTo(1200,1800);x.lineTo(900,1800);x.closePath();x.fill();
+      x.fillStyle='#efe0c8';[[150,0.7],[530,0.55],[900,0.85]].forEach(([ax,k],i)=>{const aw=[240,260,170][i],ay=[760,560,860][i],ah=[620,820,520][i];x.beginPath();x.moveTo(ax,ay+ah);x.lineTo(ax,ay+aw/2);x.arc(ax+aw/2,ay+aw/2,aw/2,Math.PI,0);x.lineTo(ax+aw,ay+ah);x.closePath();x.fill()});
+      x.fillStyle='#e8cfa8';for(let i=0;i<4;i++)x.fillRect(0,1380+i*70,W,36);
+      x.fillStyle='rgba(120,70,40,.10)';for(let i=0;i<120;i++)x.fillRect(rnd()*W,rnd()*H,3+rnd()*18,2);
     }
-  }
-  side(-60,430,-1);side(780,1260,1);
-  const f=x.createLinearGradient(0,H*.55,0,H);f.addColorStop(0,'rgba(220,220,205,0)');f.addColorStop(1,'rgba(40,40,36,.85)');x.fillStyle=f;x.fillRect(0,H*.55,W,H*.45);
-  x.fillStyle='rgba(235,235,225,.18)';x.fillRect(0,0,W,H);
+  ];
+  scenes[pick==null?Math.floor(Math.random()*scenes.length):pick]();
   return c;
 }
 setImage(makeSample(),1200,1800);
@@ -1027,7 +1132,7 @@ function startExport(){
   mediaRec.onstop=()=>{
     const ext=mime.startsWith('video/mp4')?'mp4':'webm';
     const blob=new Blob(chunks,{type:mime.split(';')[0]}),url=URL.createObjectURL(blob);
-    $('#result').innerHTML=`<p class="hint">Your video is ready: .${ext}, ${(blob.size/1e6).toFixed(1)} MB.</p><a href="${url}" download="edit-recording.${ext}">Download .${ext}</a>`+(ext==='webm'?'<p class="hint">WebM: convert with HandBrake or ffmpeg before importing into Premiere / After Effects.</p>':'');
+    showResult(url,ext,blob.size);
     setStatus('Export finished: see the Export tab');
     document.querySelector('[data-t=exp]').click();
   };
@@ -1370,6 +1475,96 @@ async function loadRaw(f){
 
 buildChips();buildUI();setSize();ui();syncChips();
 requestAnimationFrame(tick);
+
+
+/* Inside the Claude artifact viewer, saves go through its own download prompt.
+   On a normal web page window.claude does not exist and the plain link is used. */
+let ERDL=null;
+try{if(window.claude&&claude.use)claude.use('downloads').then(d=>{ERDL=d||null}).catch(()=>{})}catch(e){}
+document.addEventListener('click',e=>{
+  const a=e.target.closest&&e.target.closest('#dlLink');
+  if(!a||!ERDL||a.classList.contains('locked')||!a.getAttribute('href'))return;
+  e.preventDefault();
+  fetch(a.getAttribute('href')).then(r=>r.blob()).then(b=>ERDL.save({filename:a.getAttribute('download')||'edit-recording.mp4',data:b})).catch(()=>{});
+});
+/* ---------- result + follow note (honor code) ---------- */
+const IG_URL='https://www.instagram.com/reyesdelpech/',IG_KEY='editRecorderFollowed';
+const IG_DAYS=7;
+const igDone=()=>{try{const t=+localStorage.getItem(IG_KEY);return t>1e12&&Date.now()-t<IG_DAYS*864e5}catch(e){return false}};
+function showResult(url,ext,size){
+  const webm=ext==='webm'?'<p class="hint">WebM: convert with HandBrake or ffmpeg before importing into Premiere / After Effects.</p>':'';
+  const ready=`<p class="hint">Your video is ready: .${ext}, ${(size/1e6).toFixed(1)} MB.</p>`;
+  const dl=(locked)=>`<a class="dl${locked?' locked':''}" id="dlLink" ${locked?'aria-disabled="true"':`href="${url}" download="edit-recording.${ext}"`}>Download .${ext}</a>`;
+  const unlock=()=>{try{localStorage.setItem(IG_KEY,String(Date.now()))}catch(e){}
+    $('#result').innerHTML=ready+dl(false)+'<p class="unlockhint">Thank you! 🙏</p>'+webm};
+  if(igDone()){$('#result').innerHTML=ready+dl(false)+webm;return}
+  $('#result').innerHTML=ready+`<div class="fnote"><h4>The tip jar is a follow</h4><p>The tool is free, and a follow is how you say thanks. Honor system, I won\u2019t check. Open Instagram, follow, close that tab and come back here: your download unlocks right after.</p><a class="follow" id="igFollow" href="${IG_URL}" target="_blank" rel="noopener">Follow on Instagram ↗</a><button class="already" id="igAlready" type="button" hidden>I followed, unlock my download</button></div>`+dl(true)+'<p class="unlockhint">Download unlocks after you visit Instagram.</p>'+webm;
+  let opened=false;
+  const back=()=>{if(opened&&document.visibilityState==='visible'){document.removeEventListener('visibilitychange',back);removeEventListener('focus',back);unlock()}};
+  $('#igFollow').addEventListener('click',()=>{opened=true;$('#igAlready').hidden=false;document.addEventListener('visibilitychange',back);addEventListener('focus',back)});
+  $('#igAlready').addEventListener('click',unlock);
+}
+/* ---- first-run tour ---- */
+(()=>{
+  const KEY='editRecorderTourDone';
+  const steps=[
+    {el:'#btnLoad',t:'1 · Load a photo',x:'Start here. Pick a JPG, PNG or a RAW file. Everything stays on your computer.'},
+    {el:'#aspect',t:'2 · Pick a format',x:'Choose the video shape: 9:16 for Reels and TikTok, 4:5 for the feed, or square.'},
+    {el:'#controls',t:'3 · Move the sliders',x:'Edit the photo here: crop, light, color, curve, detail. Each move is recorded as a step.'},
+    {el:'#recGroup',t:'4 · Recording controls',x:'With Auto-record ticked, recording starts the moment you touch a slider. Or press Record yourself, then use Pause and Stop. Reset edit clears everything and starts over.'},
+    {el:'#chips',t:'5 · Your steps',x:'Each group you edit becomes a step chip. Click a chip to jump to that step.'},
+    {el:'#transport',t:'6 · Play it back',x:'Play, pause and drag the circle to scrub through what you recorded.'},
+    {el:'#tabs',t:'7 · Captions and Export',x:'Captions lets you rename each step. Export sets length, speed, the before/after sweep and more.'},
+    {el:'#btnExport',t:'8 · Export the video',x:'When you are happy, export. The video downloads as a file you can post.'}
+  ];
+  const $=s=>document.querySelector(s);
+  const root=$('#tour'),hole=$('#tourHole'),card=$('#tourCard'),arrow=card.querySelector('.arrow');
+  let i=0;
+  const DAYS=6;
+  const done=()=>{try{localStorage.setItem(KEY,String(Date.now()))}catch(e){}};
+  const seen=()=>{try{const t=+localStorage.getItem(KEY);return t>1e12&&Date.now()-t<DAYS*864e5}catch(e){return false}};
+  function place(){
+    const st=steps[i];let el=$(st.el);
+    if(!el||!el.offsetWidth){ // skip targets that are hidden
+      if(i<steps.length-1){i++;return place()}
+      return end()}
+    const r=el.getBoundingClientRect(),pad=6;
+    hole.style.left=(r.left-pad)+'px';hole.style.top=(r.top-pad)+'px';
+    hole.style.width=(r.width+pad*2)+'px';hole.style.height=(r.height+pad*2)+'px';
+    $('#tourStep').textContent='Step '+(i+1)+' of '+steps.length;
+    $('#tourTitle').textContent=st.t.replace(/^\d+ · /,'');
+    $('#tourText').textContent=st.x;
+    $('#tourBack').style.visibility=i?'visible':'hidden';
+    $('#tourNext').textContent=i===steps.length-1?'Done':'Next';
+    const W=innerWidth,H=innerHeight,cw=card.offsetWidth,ch=card.offsetHeight,g=18;
+    const opts={
+      bottom:{x:r.left+r.width/2-cw/2,y:r.bottom+pad+g},
+      top:{x:r.left+r.width/2-cw/2,y:r.top-pad-g-ch},
+      left:{x:r.left-pad-g-cw,y:r.top+r.height/2-ch/2},
+      right:{x:r.right+pad+g,y:r.top+r.height/2-ch/2}};
+    const fits=o=>o.x>=8&&o.y>=8&&o.x+cw<=W-8&&o.y+ch<=H-8;
+    let side=['bottom','top','left','right'].find(k=>fits(opts[k]));
+    if(!side){side='bottom';opts.bottom={x:Math.min(Math.max(8,opts.bottom.x),W-cw-8),y:Math.min(Math.max(8,r.top+24),H-ch-8)}}
+    const o=opts[side];
+    const x=Math.min(Math.max(8,o.x),W-cw-8),y=Math.min(Math.max(8,o.y),H-ch-8);
+    card.style.left=x+'px';card.style.top=y+'px';card.dataset.side=side;
+    if(side==='bottom'||side==='top'){arrow.style.left=Math.min(Math.max(14,r.left+r.width/2-x-7),cw-28)+'px';arrow.style.top=''}
+    else{arrow.style.top=Math.min(Math.max(14,r.top+r.height/2-y-7),ch-28)+'px';arrow.style.left=''}
+  }
+  function start(){i=0;root.classList.add('on');place();$('#tourNext').focus()}
+  function end(){root.classList.remove('on');done()}
+  $('#tourNext').onclick=()=>{if(i>=steps.length-1)return end();i++;place()};
+  $('#tourBack').onclick=()=>{if(i>0){i--;place()}};
+  $('#tourSkip').onclick=end;
+  $('#tourBtn').onclick=start;
+  addEventListener('keydown',e=>{if(!root.classList.contains('on'))return;
+    if(e.key==='Escape')end();
+    else if(e.key==='ArrowRight'||e.key==='Enter'){e.preventDefault();$('#tourNext').click()}
+    else if(e.key==='ArrowLeft')$('#tourBack').click()});
+  addEventListener('resize',()=>{if(root.classList.contains('on'))place()});
+  window.editRecorderTour=start;
+  if(!seen())setTimeout(start,600);
+})();
 </script>
 </body>
 </html>
